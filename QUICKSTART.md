@@ -4,12 +4,15 @@
 
 ### 1. **Devcontainer Configuration**
 - ✅ Fixed misnamed `.devcontainer.json` → now correctly named `devcontainer.json`
+- ✅ Fixed Docker build context to use workspace root (prevents lstat errors)
+- ✅ Dockerfile path correctly points to `docker/Dockerfile` (relative to devcontainer.json)
 - ✅ Configured automatic download of macOS 14.4 SDK (ARM64-compatible)
 - ✅ Set `OSXCROSS_TARGET=darwin23` for Apple Silicon targets
 
 ### 2. **Build Scripts**
 - ✅ Updated `setup-osxcross.sh` to build ARM64 cross-compilers
-- ✅ Added automatic ∏osxcross cloning if not present during image build
+- ✅ Added automatic osxcross cloning if not present during image build
+- ✅ Added curl retries and SHA256 checksum verification for SDK downloads
 - ✅ Added verification of ARM64 compiler after build
 
 ### 3. **CMake Toolchain**
@@ -21,11 +24,18 @@
 - ✅ Made compiler selection conditional (works on both host Mac and in container)
 - ✅ Only uses Homebrew LLVM when building on host macOS
 - ✅ Respects toolchain file when cross-compiling in container
+- ✅ **Fixed C++20 module scanning**: Uses `FILE_SET CXX_MODULES` for native builds, regular source files for cross-compilation
+- ✅ Automatically disables module scanning when cross-compiling (CMAKE_CXX_SCAN_FOR_MODULES=OFF)
 - ✅ Homebrew-specific include paths only applied on host
 
 ### 5. **Dockerfile**
-- ✅ Added `ninja-build` for faster builds
+- ✅ Added `ninja-build` for faster builds (required for C++20 module support)
 - ✅ Added SSL, XML, and compression libraries needed by osxcross
+- ✅ COPY command uses workspace-relative path (`.devcontainer/docker/setup-osxcross.sh`)
+
+### 6. **Repository Structure**
+- ✅ Added `.gitignore` to exclude build artifacts and IDE files
+- ✅ All paths are portable - no hardcoded absolute paths
 
 ## How to Use
 
@@ -112,6 +122,23 @@ Make sure you're passing the full path:
 ```bash
 cmake .. -DCMAKE_TOOLCHAIN_FILE=/workspace/.devcontainer/docker/macos_toolchain.cmake
 ```
+
+### CMake error about module dependency scanning
+If you see an error like:
+```
+CMake Error: The target named "TCS_Helper" has C++ sources that may use modules,
+but the compiler does not provide a way to discover the import graph dependencies.
+```
+
+This is now automatically handled! The CMakeLists.txt detects cross-compilation and:
+- Disables CMAKE_CXX_SCAN_FOR_MODULES when cross-compiling
+- Adds module files as regular sources instead of using FILE_SET CXX_MODULES
+- Still uses proper module scanning for native builds
+
+If you still see this error, ensure:
+1. You're using Ninja generator: `cmake -G Ninja ...`
+2. The toolchain file is properly loaded
+3. You don't have a stale CMakeCache.txt (delete it: `rm CMakeCache.txt`)
 
 ### Module compilation errors
 The container's clang must support C++20 modules. If you see module errors, check:

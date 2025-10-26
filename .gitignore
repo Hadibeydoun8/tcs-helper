@@ -1,0 +1,26 @@
+# Build directories
+cmake-build-*/
+build/
+out/
+
+# IDE files
+.vscode/
+.idea/
+.devcontainer/.idea/
+
+# CMake generated files (not toolchain files)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Compiled binaries
+TCS_Helper
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+
+# macOS
+.DS_Store
