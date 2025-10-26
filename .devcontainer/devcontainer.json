@@ -10,7 +10,7 @@
     // context of "." would make the build context only the .devcontainer dir
     // which causes lstat errors like "/path/.devcontainer/.devcontainer: no such file".
     // Use ".." (workspace root) and point the dockerfile path into .devcontainer.
-    "dockerfile": "docker/Dockerfile",
+    "dockerfile": ".devcontainer/docker/Dockerfile",
     "context": "..",
     // By default, skip cloning osxcross during image build; the container's entrypoint will
     // clone/build at runtime if needed (faster image builds and avoids shipping SDK in image).
