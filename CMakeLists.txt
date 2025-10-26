@@ -39,18 +39,30 @@ endif()
 # Create executable
 add_executable(TCS_Helper main.cpp)
 
-# Add C++20 modules as a file set. Note: main.cpp is already passed to add_executable,
-# so avoid duplicating it here.
-target_sources(TCS_Helper
-    PRIVATE
-        FILE_SET
-            CXX_MODULES
-        BASE_DIRS
-            lib
-        FILES
-            lib/dataclasses.ixx
-            lib/meet_manager.ixx
-)
+# Add C++20 modules. When cross-compiling or if the compiler doesn't support
+# module dependency scanning, add the modules as regular source files instead
+# of using FILE_SET CXX_MODULES (which requires scanning support).
+if(CMAKE_CROSSCOMPILING OR NOT CMAKE_CXX_COMPILER_ID)
+  # Cross-compiling: add modules as regular source files
+  target_sources(TCS_Helper PRIVATE
+      lib/dataclasses.ixx
+      lib/meet_manager.ixx
+  )
+  message(STATUS "Adding module files as regular sources (cross-compiling or no compiler ID)")
+else()
+  # Native build with module support: use FILE_SET CXX_MODULES for proper dependency scanning
+  target_sources(TCS_Helper
+      PRIVATE
+          FILE_SET
+              CXX_MODULES
+          BASE_DIRS
+              lib
+          FILES
+              lib/dataclasses.ixx
+              lib/meet_manager.ixx
+  )
+  message(STATUS "Using FILE_SET CXX_MODULES for module dependency scanning")
+endif()
 
 # Only apply Homebrew-specific include/link settings when building on host macOS
 if(APPLE AND NOT CMAKE_CROSSCOMPILING AND EXISTS "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain")
